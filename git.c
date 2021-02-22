@@ -64,24 +64,54 @@ void *git_thread(void *arg)
 	return NULL;
 }
 
+struct statuses {
+	size_t c;
+	char s[64];
+	char format[3];
+	char prefix;
+};
+enum status_index { added, deleted, modified_unstaged, modified_staged, untracked, status_index_n };
+
 static char *get_git_status(void)
 {
-	size_t modified = 0;
-
 	FILE *f = popen("git status --porcelain=v1 -z 2>/dev/null", "re");
 	if (!f)
 		return NULL;
+
+	struct statuses g[status_index_n] = {
+		[added] = { .format = "A ", .prefix = '+' },
+		[deleted] = { .format = "D ", .prefix = '-' },
+		[modified_unstaged] = { .format = " M", .prefix = '~' },
+		[modified_staged] = { .format = "M ", .prefix = '>' },
+		[untracked] = { .format = "??", .prefix = '+' },
+	};
 
 	char *line = NULL;
 	size_t n = 0;
 	ssize_t l;
 	while ((l = getdelim(&line, &n, 0, f)) != -1) {
-		modified += l>4 && line[1] == 'M';
+		if (l > 4) {
+			for (int i = 0; i < status_index_n; i++) {
+				g[i].c += !strncmp(g[i].format, line, 2);
+			}
+		}
 	}
 	free(line);
 
+	/* cheat to display added+modified_staged in one place */
+	g[added].c += g[modified_staged].c;
+
 	if (!pclose(f)) {
-		asprintf(&git_status, "~%zu", modified);
+		for (int i = 0; i < status_index_n; i++) {
+			if (g[i].c) {
+				snprintf(g[i].s, sizeof(g[i].s), "%c%zu", g[i].prefix, g[i].c);
+			}
+		}
+		if (asprintf(&git_status, "%s%s%s", g[added].s, g[deleted].s, g[modified_unstaged].s) == 0) {
+			/* if string is empty, don't display it */
+			free(git_status);
+			git_status = NULL;
+		}
 	}
 
 	return git_status;
