@@ -14,6 +14,7 @@ enum lang_index {
 	/* misc */
 	build_system_lang,
 	kicad_lang,
+	xbps_src_lang,
 	lang_index_n
 };
 
@@ -32,6 +33,7 @@ check_function_decl(python);
 check_function_decl(rust);
 check_function_decl(build_system);
 check_function_decl(kicad);
+check_function_decl(xbps_src);
 
 const struct lang_check l[] = {
 	struct_item(c, " ℂ"),
@@ -40,6 +42,7 @@ const struct lang_check l[] = {
 	struct_item(rust, " 🦀"),
 	struct_item(build_system, " 📦"),
 	struct_item(kicad, " ⚡"),
+	struct_item(xbps_src, " 😨"),
 };
 
 #undef struct_item
@@ -121,6 +124,11 @@ check_function_decl(kicad)
 		 !fnmatch("*.drl", s, 0) || !fnmatch("*.gbr", s, 0) ||
 		 !fnmatch("*.sch", s, 0)) ||
 		isdir(t) && !fnmatch(".pretty", s, 0);
+}
+
+check_function_decl(xbps_src)
+{
+	return isfile(t) && !strcmp("xbps-src", s);
 }
 
 #undef check_function
