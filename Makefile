@@ -13,7 +13,7 @@ bindir = $(PREFIX)/bin
 
 all: ep
 
-ep: ep.c out.c path.c git.c lang.c $(LANGUAGE)
+ep: ep.c out.c path.c git.c lang.c ssh.c $(LANGUAGE)
 
 install: ep
 	install -m755 $< $(bindir)/ep

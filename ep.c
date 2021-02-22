@@ -71,13 +71,9 @@ int main(int argc, char **argv)
 		p("[chroot] ");
 
 	const char *home = getenv("HOME");
-	const char *hostname = getenv("HOSTNAME");
 
 	/* show we are on a different machine */
-	if (hostname) {
-		p(hostname);
-		p(" ");
-	}
+	print_ssh();
 
 	print_pwd(home);
 

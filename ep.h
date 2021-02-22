@@ -35,4 +35,7 @@ void print_git(void);
 void *lang_thread(void *);
 void print_lang(uint64_t);
 
+/* from ssh.c */
+void print_ssh(void);
+
 #endif
