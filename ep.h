@@ -15,7 +15,7 @@ extern const int fish_style_dir;
 void print_pwd(const char *);
 
 /* from git.c */
-extern char *git_branch_name;
-void *get_git_branch_name(void *);
+void *git_thread(void *);
+void print_git(void);
 
 #endif

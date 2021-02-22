@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 
 	/* start threads for long(er) running steps */
 	pthread_t git_handle;
-	if (pthread_create(&git_handle, NULL, get_git_branch_name, NULL)) {
+	if (pthread_create(&git_handle, NULL, git_thread, NULL)) {
 		e(WARN, "couldn't create git thread", errno);
 	}
 
@@ -67,10 +67,7 @@ int main(int argc, char **argv)
 
 	/* git status */
 	pthread_join(git_handle, NULL);
-	if (git_branch_name) {
-		p(" ");
-		p(git_branch_name);
-	}
+	print_git();
 
 	/* print currently active shell jobs */
 	if (shell_jobs) {
