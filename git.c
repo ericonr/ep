@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "git.h"
+#include "ep.h"
 
 char *git_branch_name;
 

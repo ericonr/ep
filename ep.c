@@ -17,7 +17,7 @@
 #include <pthread.h>
 
 #include "info_strings.h"
-#include "git.h"
+#include "ep.h"
 
 #define PROMPT " ➜ "
 
