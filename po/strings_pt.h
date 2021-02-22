@@ -1,1 +1,1 @@
-const char *unknowndir = "[desconhecido]";
+static const char *unknowndir = "[desconhecido]";

@@ -9,7 +9,7 @@ bindir = $(PREFIX)/bin
 
 all: ep
 
-ep: ep.c git.c
+ep: ep.c out.c path.c git.c
 
 install: ep
 	install -m755 $< $(bindir)/ep
