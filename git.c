@@ -92,7 +92,7 @@ struct statuses {
 	char format[3];
 	char prefix;
 };
-enum status_index { added, deleted, modified_unstaged, modified_staged, untracked, status_index_n };
+enum status_index { added, deleted, modified_unstaged, modified_staged, modified_both, untracked, status_index_n };
 
 static void *get_git_status(void *arg)
 {
@@ -107,6 +107,7 @@ static void *get_git_status(void *arg)
 		[deleted] = { .format = "D ", .prefix = '-' },
 		[modified_unstaged] = { .format = " M", .prefix = '~' },
 		[modified_staged] = { .format = "M ", .prefix = '>' },
+		[modified_both] = { .format = "MM", .prefix = '~' },
 		[untracked] = { .format = "??", .prefix = '+' },
 	};
 
@@ -122,8 +123,9 @@ static void *get_git_status(void *arg)
 	}
 	free(line);
 
-	/* cheat to display added+modified_staged in one place */
-	g[added].c += g[modified_staged].c;
+	/* cheat to display things closer to a "userful" measure */
+	g[added].c += g[modified_staged].c + g[modified_both].c;
+	g[modified_unstaged].c += g[modified_both].c;
 
 	if (!pclose(f)) {
 		for (int i = 0; i < status_index_n; i++) {
