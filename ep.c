@@ -13,14 +13,35 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <locale.h>
+#include <errno.h>
+#include <pthread.h>
 
 #include "info_strings.h"
+#include "git.h"
 
 #define PROMPT " ➜ "
 
 /* function to print string */
 FILE *out;
 static inline void p(const char *s) { fputs(s, out); }
+
+/* function to log stuff */
+enum log_level_value { DEBUG, INFO, WARN, ERROR };
+const enum log_level_value log_level = ERROR;
+FILE *outerr;
+static void e(enum log_level_value l, const char *s, int errcode)
+{
+	if (l < log_level) {
+		return;
+	}
+
+	if (errcode) {
+		perror(s);
+	} else {
+		fputs(s, outerr);
+		fputs("\n", outerr);
+	}
+}
 
 /* print current dir in fish style */
 const int fish_style_dir = 1;
@@ -29,6 +50,7 @@ int main(int argc, char **argv)
 {
 	setlocale(LC_ALL, "");
 	out = stdout;
+	outerr = stderr;
 
 	char *shell_jobs = NULL;
 	int chroot = 0;
@@ -42,10 +64,16 @@ int main(int argc, char **argv)
 				shell_jobs = optarg;
 				break;
 			default:
-				/* XXX: log error */
+				e(ERROR, "invalid command line option", 0);
 				return 1;
 				break;
 		}
+	}
+
+	/* start threads for long(er) running steps */
+	pthread_t git_handle;
+	if (pthread_create(&git_handle, NULL, get_git_branch_name, NULL)) {
+		e(WARN, "couldn't create git thread", errno);
 	}
 
 	if (chroot)
@@ -101,6 +129,13 @@ int main(int argc, char **argv)
 			/* HOME is unset */
 			p(rpwd);
 		}
+	}
+
+	/* git status */
+	pthread_join(git_handle, NULL);
+	if (git_branch_name) {
+		p(" ");
+		p(git_branch_name);
 	}
 
 	/* print currently active shell jobs */
