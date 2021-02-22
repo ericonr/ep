@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <fnmatch.h>
@@ -7,9 +8,12 @@
 
 enum lang_index {
 	c_lang,
-	//cpp_lang,
+	go_lang,
 	python_lang,
-	//go_lang,
+	rust_lang,
+	/* misc */
+	build_system_lang,
+	kicad_lang,
 	lang_index_n
 };
 
@@ -23,11 +27,19 @@ struct lang_check {
 #define struct_item(lang, d) [lang##_lang] = { .check = check_function(lang), .display = d }
 
 check_function_decl(c);
+check_function_decl(go);
 check_function_decl(python);
+check_function_decl(rust);
+check_function_decl(build_system);
+check_function_decl(kicad);
 
 const struct lang_check l[] = {
-	struct_item(c, " C"),
+	struct_item(c, " ℂ"),
+	struct_item(go, " 🐹"),
 	struct_item(python, " 🐍"),
+	struct_item(rust, " 🦀"),
+	struct_item(build_system, " 📦"),
+	struct_item(kicad, " ⚡"),
 };
 
 #undef struct_item
@@ -68,15 +80,47 @@ void *lang_thread(void *arg)
 }
 
 static inline int isfile(unsigned char t) { return t & (DT_REG | DT_LNK); }
+static inline int isdir(unsigned char t) { return t & (DT_DIR | DT_LNK); }
 
 check_function_decl(c)
 {
-	return isfile(t) && !fnmatch("*.c", s, 0);
+	return isfile(t) &&
+		(!fnmatch("*.c", s, 0) || !fnmatch("*.h", s, 0) ||
+		 !fnmatch("*.cpp", s, 0) || !fnmatch("*.cc", s, 0));
+}
+
+check_function_decl(go)
+{
+	return isfile(t) &&
+		(!strcmp("go.mod", s) || !strcmp("go.mod", s) ||
+		 !fnmatch("*.go", s, 0));
 }
 
 check_function_decl(python)
 {
 	return isfile(t) && !fnmatch("*.py", s, 0);
+}
+
+check_function_decl(rust)
+{
+	return isfile(t) &&
+		(!fnmatch("*.rs", s, 0) || !fnmatch("Cargo.*", s, 0));
+}
+
+check_function_decl(build_system)
+{
+	return isfile(t) &&
+		(!strcmp("CMakeLists.txt", s) || !strcmp("meson.build", s) ||
+		 !strcmp("configure.ac", s) || !strcmp("Makefile.am", s) || !strcmp("Makefile.in", s));
+}
+
+check_function_decl(kicad)
+{
+	return isfile(t) &&
+		(!fnmatch("*-lib-table", s, 0) || !fnmatch("*.kicad_pcb", s, 0) ||
+		 !fnmatch("*.drl", s, 0) || !fnmatch("*.gbr", s, 0) ||
+		 !fnmatch("*.sch", s, 0)) ||
+		isdir(t) && !fnmatch(".pretty", s, 0);
 }
 
 #undef check_function
