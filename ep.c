@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 				command_duration = strtoll(optarg, NULL, 10);
 				break;
 			case 'e':
+				/* won't print anything if optarg can't be parsed into a number */
 				exit_status = atoi(optarg);
 				break;
 			case 'j':
@@ -112,14 +113,15 @@ int main(int argc, char **argv)
 		}
 	}
 
-	/* print previous comman'ds duration and exit status */
+	/* print previous command's duration and exit status */
 	if (command_duration >= 5000) {
 		char dur[256];
 		/* TODO: pretty print with hours and minutes? */
 		snprintf(dur, sizeof(dur), " %llds", command_duration/1000);
 		p(dur);
 	}
-	if (exit_status) {
+	/* 127 means command not found, that prints a big enough message already */
+	if (exit_status && exit_status != 127) {
 		char ex[256];
 		snprintf(ex, sizeof(ex), " [%d]", exit_status);
 		p(ex);
