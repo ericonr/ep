@@ -46,9 +46,17 @@ int main(int argc, char **argv)
 	}
 
 	/* start threads for long(er) running steps */
+	struct threaded_task root_lang_task = { .task = task_launch_root_lang };
 	pthread_t git_handle;
-	if (pthread_create(&git_handle, NULL, git_thread, NULL)) {
-		e(WARN, "couldn't create git thread", errno);
+	if (pthread_create(&git_handle, NULL, git_thread, &root_lang_task)) {
+		e(ERROR, "couldn't create git thread", errno);
+		return 1;
+	}
+
+	pthread_t pwd_lang_handle;
+	if (pthread_create(&pwd_lang_handle, NULL, lang_thread, NULL)) {
+		e(ERROR, "couldn't create lang thread", errno);
+		return 1;
 	}
 
 	if (chroot)
@@ -68,6 +76,11 @@ int main(int argc, char **argv)
 	/* git status */
 	pthread_join(git_handle, NULL);
 	print_git();
+
+	/* programming languages */
+	pthread_join(pwd_lang_handle, NULL);
+	if (root_lang_task.launched) pthread_join(root_lang_task.handle, NULL);
+	print_lang();
 
 	/* print currently active shell jobs */
 	if (shell_jobs) {
