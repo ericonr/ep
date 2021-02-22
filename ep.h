@@ -2,6 +2,7 @@
 #define EP_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include <pthread.h>
 #include <signal.h>
 
@@ -32,6 +33,6 @@ void print_git(void);
 
 /* from lang.c */
 void *lang_thread(void *);
-void print_lang(void);
+void print_lang(uint64_t);
 
 #endif

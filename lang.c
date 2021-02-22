@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <fnmatch.h>
 
@@ -18,16 +19,12 @@ struct lang_check {
 	char display[8];
 };
 
-struct lang_check l[] = {
+const struct lang_check l[] = {
 	[c_lang] = { .check = c_lang_check, .display = " C" },
 };
 
 /* bitmap of 1<<lang_index */
-static uint64_t pwd_langs, root_langs;
-
-void print_lang(void) {
-	uint64_t mask = pwd_langs | root_langs;
-
+void print_lang(uint64_t mask) {
 	for (int i = 0; i < lang_index_n; i++) {
 		if (mask & (1 << i)) {
 			p(l[i].display);
@@ -37,9 +34,11 @@ void print_lang(void) {
 
 void *lang_thread(void *arg)
 {
-	/* scan current dir or received root of project */
+	/* scan current dir if arg is NULL */
 	char *path = arg ? arg : ".";
-	uint64_t *mask = arg ? &root_langs : &pwd_langs;
+	uint64_t *mask = calloc(1, sizeof(mask));
+	if (!mask)
+		return NULL;
 
 	DIR *d = opendir(path);
 	if (!d)
@@ -56,7 +55,7 @@ void *lang_thread(void *arg)
 		}
 	}
 
-	return NULL;
+	return mask;
 }
 
 static inline int isfile(unsigned char t) { return t & (DT_REG | DT_LNK); }

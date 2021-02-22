@@ -4,7 +4,7 @@
  * configuring existing ones.
  *
  * Liberties taken:
- *   - will crash with segfault if allocations fail; NULL is special only when meaningful beyond allocation
+ *   - might crash with segfault if some allocations fail; NULL is special only when meaningful beyond allocation
  *   - assumes stdio is reasonably buffered, so multiple fputs calls aren't expensive
  */
 
@@ -78,9 +78,19 @@ int main(int argc, char **argv)
 	print_git();
 
 	/* programming languages */
-	pthread_join(pwd_lang_handle, NULL);
-	if (root_lang_task.launched) pthread_join(root_lang_task.handle, NULL);
-	print_lang();
+	uint64_t pwd_langs = 0, root_langs = 0;
+	void *tmp_mask;
+	pthread_join(pwd_lang_handle, &tmp_mask);
+	/* if thread returned NULL, assume no language */
+	#define read_mask() (tmp_mask ? *(uint64_t *)tmp_mask : 0)
+	pwd_langs = read_mask();
+	/* safe to check for launched here because we joined git_handle above */
+	if (root_lang_task.launched) {
+		pthread_join(root_lang_task.handle, &tmp_mask);
+		root_langs = read_mask();
+	}
+	#undef read_mask
+	print_lang(pwd_langs | root_langs);
 
 	/* print currently active shell jobs */
 	if (shell_jobs) {
