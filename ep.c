@@ -28,12 +28,19 @@ int main(int argc, char **argv)
 	outerr = stderr;
 
 	char *shell_jobs = NULL;
-	int chroot = 0;
+	long long command_duration = 0;
+	int chroot = 0, exit_status = 0;
 	int c;
-	while((c = getopt(argc, argv, "cj:")) != -1) {
+	while((c = getopt(argc, argv, "cd:e:j:")) != -1) {
 		switch (c) {
 			case 'c':
 				chroot = 1;
+				break;
+			case 'd':
+				command_duration = strtoll(optarg, NULL, 10);
+				break;
+			case 'e':
+				exit_status = atoi(optarg);
 				break;
 			case 'j':
 				shell_jobs = optarg;
@@ -103,6 +110,19 @@ int main(int argc, char **argv)
 				p(shell_jobs);
 			}
 		}
+	}
+
+	/* print previous comman'ds duration and exit status */
+	if (command_duration >= 5000) {
+		char dur[256];
+		/* TODO: pretty print with hours and minutes? */
+		snprintf(dur, sizeof(dur), " %llds", command_duration/1000);
+		p(dur);
+	}
+	if (exit_status) {
+		char ex[256];
+		snprintf(ex, sizeof(ex), " [%d]", exit_status);
+		p(ex);
 	}
 
 	p(PROMPT);
