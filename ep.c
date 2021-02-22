@@ -30,6 +30,27 @@ int main(int argc, char **argv)
 	setlocale(LC_ALL, "");
 	out = stdout;
 
+	char *shell_jobs = NULL;
+	int chroot = 0;
+	int c;
+	while((c = getopt(argc, argv, "cj:")) != -1) {
+		switch (c) {
+			case 'c':
+				chroot = 1;
+				break;
+			case 'j':
+				shell_jobs = optarg;
+				break;
+			default:
+				/* XXX: log error */
+				return 1;
+				break;
+		}
+	}
+
+	if (chroot)
+		p("[chroot] ");
+
 	const char *home = getenv("HOME");
 	const char *hostname = getenv("HOSTNAME");
 
@@ -79,6 +100,19 @@ int main(int argc, char **argv)
 		} else {
 			/* HOME is unset */
 			p(rpwd);
+		}
+	}
+
+	/* print currently active shell jobs */
+	if (shell_jobs) {
+		int n = atoi(shell_jobs);
+		if (n >= 1) {
+			p(" ✦");
+			if (n > 1) {
+				/* jobs emoji is wide */
+				p(" ");
+				p(shell_jobs);
+			}
 		}
 	}
 
