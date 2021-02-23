@@ -111,9 +111,22 @@ int main(int argc, char **argv)
 
 	/* print previous command's duration and exit status */
 	if (command_duration >= 5000) {
+		const int m = 60;
+		const int seconds_in_hour = m*m;
+		command_duration /= 1000;
+
+		long long hours = command_duration / seconds_in_hour;
+		long long minutes = command_duration / m - hours * m;
+		command_duration -= hours * seconds_in_hour + minutes * m;
+
 		char dur[256];
-		/* TODO: pretty print with hours and minutes? */
-		snprintf(dur, sizeof(dur), " %llds", command_duration/1000);
+		if (hours) {
+			snprintf(dur, sizeof(dur), " %lldh%lldm%llds", hours, minutes, command_duration);
+		} else if (minutes) {
+			snprintf(dur, sizeof(dur), " %lldm%llds", minutes, command_duration);
+		} else {
+			snprintf(dur, sizeof(dur), " %llds", command_duration);
+		}
 		p(dur);
 	}
 	/* 127 means command not found, that prints a big enough message already */
