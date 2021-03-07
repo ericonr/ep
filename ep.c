@@ -70,12 +70,18 @@ int main(int argc, char **argv)
 	if (chroot)
 		p("[chroot] ");
 
+	/* XXX: treat allocation failures as variables not existing in environment */
 	const char *home = getenv("HOME");
+	char *pwd = getenv("PWD");
+	#define cond_strdup(s) s = (s ? strdup(s) : s)
+	cond_strdup(home);
+	cond_strdup(pwd);
+	#undef cond_strdup
 
 	/* show we are on a different machine */
 	print_ssh();
 
-	print_pwd(home);
+	print_pwd(home, pwd);
 
 	/* git status */
 	void *git_info;

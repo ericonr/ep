@@ -24,7 +24,7 @@ void e(enum log_level_value, const char *, int);
 
 /* from path.c */
 extern const int fish_style_dir;
-void print_pwd(const char *);
+void print_pwd(const char *, char *);
 
 /* from git.c */
 void *git_thread(void *);
