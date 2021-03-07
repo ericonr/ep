@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <pthread.h>
-#include <signal.h>
 
 enum task_identity {
 	task_launch_root_lang,
@@ -12,7 +11,7 @@ enum task_identity {
 
 struct threaded_task {
 	pthread_t handle;
-	sig_atomic_t launched;
+	int launched;
 	enum task_identity task;
 };
 
