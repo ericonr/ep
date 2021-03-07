@@ -28,7 +28,8 @@ void print_pwd(const char *);
 
 /* from git.c */
 void *git_thread(void *);
-void print_git(void);
+void print_git(void *);
+void free_git(void *);
 
 /* from lang.c */
 void *lang_thread(void *);

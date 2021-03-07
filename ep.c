@@ -78,8 +78,10 @@ int main(int argc, char **argv)
 	print_pwd(home);
 
 	/* git status */
-	pthread_join(git_handle, NULL);
-	print_git();
+	void *git_info;
+	pthread_join(git_handle, &git_info);
+	if (git_info)
+		print_git(git_info);
 
 	/* programming languages */
 	uint64_t pwd_langs = 0, root_langs = 0;
@@ -95,6 +97,9 @@ int main(int argc, char **argv)
 	}
 	#undef read_mask
 	print_lang(pwd_langs | root_langs);
+
+	/* we are done with git_info after langs is finished */
+	free_git(git_info);
 
 	/* print currently active shell jobs */
 	if (shell_jobs) {

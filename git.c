@@ -5,18 +5,36 @@
 
 #include "ep.h"
 
-static char *git_branch_name, *git_status, *git_root;
-void print_git(void)
-{
-	if (git_branch_name) {
-		p(" ");
-		p(git_branch_name);
+struct git_info {
+	char *git_branch_name, *git_status, *git_root;
+};
 
-		if (git_status) {
+void print_git(void *arg)
+{
+	struct git_info *git_info = arg;
+
+	if (git_info->git_branch_name) {
+		p(" ");
+		p(git_info->git_branch_name);
+
+		if (git_info->git_status) {
 			p(" [");
-			p(git_status);
+			p(git_info->git_status);
 			p("]");
 		}
+	}
+}
+
+
+void free_git(void *arg)
+{
+	struct git_info *git_info = arg;
+
+	if (git_info) {
+		free(git_info->git_branch_name);
+		free(git_info->git_status);
+		free(git_info->git_root);
+		free(git_info);
 	}
 }
 
@@ -53,15 +71,17 @@ void *git_thread(void *arg)
 	struct rlfc_data c = { 0 };
 	read_line_from_command("git rev-parse --abbrev-ref HEAD 2>/dev/null", &c);
 
-	if (!c.status) {
-		/* if git exits with 0, we are in a repo */
+	struct git_info *git_info;
+	if (!c.status && c.l > 0) {
+		/* if git exits with 0 and outputs a string with content, we are in a repo */
+		/* TODO: treat case where it reads HEAD */
 
-		if (c.l > 0) {
-			/* TODO: treat case where it reads HEAD */
-
-			/* line ownserhip goes to outside this function */
-			git_branch_name = c.line;
-		}
+		git_info = calloc(1, sizeof *git_info);
+		/* if we can't even allocate that, bail out */
+		if (!git_info)
+			return NULL;
+		/* line ownserhip goes to outside this function */
+		git_info->git_branch_name = c.line;
 	} else {
 		return NULL;
 	}
@@ -70,20 +90,19 @@ void *git_thread(void *arg)
 	 * if we add more stuff to do in repos, launch more threads */
 
 	pthread_t status_handle, root_handle;
-	if (pthread_create(&status_handle, NULL, get_git_status, NULL))
+	if (pthread_create(&status_handle, NULL, get_git_status, git_info))
 		goto status_create_error;
-	if (pthread_create(&root_handle, NULL, get_git_root, NULL))
+	if (pthread_create(&root_handle, NULL, get_git_root, git_info))
 		goto root_create_error;
 
-	void *local_git_root;
-	pthread_join(root_handle, &local_git_root);
-	if (root_lang_task) {
-		root_lang_task->launched = !pthread_create(&root_lang_task->handle, NULL, lang_thread, local_git_root);
+	pthread_join(root_handle, NULL);
+	if (root_lang_task && git_info->git_root) {
+		root_lang_task->launched = !pthread_create(&root_lang_task->handle, NULL, lang_thread, git_info->git_root);
 	}
 root_create_error:
 	pthread_join(status_handle, NULL);
 status_create_error:
-	return NULL;
+	return git_info;
 }
 
 struct statuses {
@@ -96,7 +115,7 @@ enum status_index { added, deleted, modified_unstaged, modified_staged, modified
 
 static void *get_git_status(void *arg)
 {
-	(void)arg;
+	struct git_info *git_info = arg;
 
 	FILE *f = popen("git status --porcelain=v1 -z 2>/dev/null", "re");
 	if (!f)
@@ -133,25 +152,25 @@ static void *get_git_status(void *arg)
 				snprintf(g[i].s, sizeof(g[i].s), "%c%zu", g[i].prefix, g[i].c);
 			}
 		}
-		if (asprintf(&git_status, "%s%s%s", g[added].s, g[deleted].s, g[modified_unstaged].s) == 0) {
+		if (asprintf(&git_info->git_status, "%s%s%s", g[added].s, g[deleted].s, g[modified_unstaged].s) == 0) {
 			/* if string is empty, don't display it */
-			free(git_status);
-			git_status = NULL;
+			free(git_info->git_status);
+			git_info->git_status = NULL;
 		}
 	}
 
-	return git_status;
+	return git_info->git_status;
 }
 
 static void *get_git_root(void *arg)
 {
-	(void)arg;
+	struct git_info *git_info = arg;
 
 	struct rlfc_data c = { 0 };
 	read_line_from_command("git rev-parse --show-toplevel 2>/dev/null", &c);
 
 	if (c.l > 0)
-		git_root = c.line;
+		git_info->git_root = c.line;
 
-	return git_root;
+	return git_info->git_root;
 }
