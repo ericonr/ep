@@ -10,10 +10,9 @@ const int fish_style_dir = 1;
 
 void print_pwd(const char *home)
 {
-	char *pwd = getcwd(NULL, 0);
-	char *rpwd = NULL;
-	if (!pwd || !(rpwd = realpath(pwd, NULL))) {
-		/* getcwd or realpath failed */
+	char *pwd = get_current_dir_name(), *rpwd = pwd;
+	if (!rpwd) {
+		/* get_current_dir_name failed */
 		p(unknowndir);
 	} else {
 		/* strip HOME out if possible */
@@ -23,27 +22,28 @@ void print_pwd(const char *home)
 				/* found HOME in pwd */
 				p("~");
 				rpwd += l;
-				if (*rpwd) {
-					if (fish_style_dir) {
-						/* short and sweet way of malloc-ing enough memory */
-						char *frpwd = strdup(rpwd);
+				if (!*rpwd)
+					/* printing ~ is enough
+					 * if it goes on, it will print ~/ */
+					goto end;
+			}
 
-						/* rpwd starts with a slash */
-						const char *c = rpwd, *co;
-						char *n = frpwd;
-						for (; c; co = c, c = strchr(co+1, '/')) {
-							*n++ = '/';
-							*n++ = *(c+1);
-						}
-						/* copy last path completely */
-						strcpy(--n, co+1);
-						p(frpwd);
-					} else {
-						p(rpwd);
-					}
+			if (fish_style_dir) {
+				/* short and sweet way of malloc-ing enough memory */
+				char *frpwd = strdup(rpwd);
+
+				/* rpwd starts with a slash */
+				const char *c = rpwd, *co;
+				char *n = frpwd;
+				for (; c; co = c, c = strchr(co+1, '/')) {
+					*n++ = '/';
+					*n++ = *(c+1);
 				}
+				/* copy last path completely */
+				strcpy(--n, co+1);
+				p(frpwd);
+				free(frpwd);
 			} else {
-				/* HOME wasn't in rpwd */
 				p(rpwd);
 			}
 		} else {
@@ -51,4 +51,7 @@ void print_pwd(const char *home)
 			p(rpwd);
 		}
 	}
+
+end:
+	free(pwd);
 }
