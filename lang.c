@@ -60,7 +60,7 @@ void *lang_thread(void *arg)
 {
 	/* scan current dir if arg is NULL */
 	char *path = arg ? arg : ".";
-	uint64_t *mask = calloc(1, sizeof(mask));
+	uint64_t *mask = calloc(1, sizeof(*mask));
 	if (!mask)
 		return NULL;
 
