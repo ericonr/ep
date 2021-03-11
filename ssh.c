@@ -5,10 +5,12 @@
 
 void print_ssh(void)
 {
-	/* expect ssh to have set these variables - we don't need to prompt if not using a tty */
-	const char *sshcon = getenv("SSH_CONNECTION"), *sshtty = getenv("SSH_TTY");
+	const char *sshcon, *sshtty;
 
-	if (sshcon && *sshcon && sshtty && *sshtty) {
+	/* expect ssh to have set these variables - we don't need to prompt if not using a tty.
+	 * we do the conditional like this because getenv is not guaranteed to be re-entrant */
+	if ((sshcon = getenv("SSH_CONNECTION")) && *sshcon &&
+			(sshtty = getenv("SSH_TTY")) && *sshtty) {
 		struct utsname u;
 		/* don't print anything if uname fails or nodename is empty */
 		if (uname(&u) || !u.nodename[0])
