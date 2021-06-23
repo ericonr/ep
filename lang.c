@@ -65,8 +65,11 @@ void *lang_thread(void *arg)
 		return NULL;
 
 	DIR *d = opendir(path);
-	if (!d)
+	if (!d) {
+		/* mask will have been successfully allocated */
+		free(mask);
 		return NULL;
+	}
 
 	struct dirent *item;
 	while ((item = readdir(d))) {
@@ -79,6 +82,7 @@ void *lang_thread(void *arg)
 		}
 	}
 
+	closedir(d);
 	return mask;
 }
 
