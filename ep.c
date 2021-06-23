@@ -92,16 +92,18 @@ int main(int argc, char **argv)
 	/* programming languages */
 	uint64_t pwd_langs = 0, root_langs = 0;
 	void *tmp_mask;
-	pthread_join(pwd_lang_handle, &tmp_mask);
 	/* if thread returned NULL, assume no language */
 	#define read_mask() (tmp_mask ? *(uint64_t *)tmp_mask : 0)
-	pwd_langs = read_mask();
+	#define store_and_discard_mask(dst) do{dst = read_mask(); free(tmp_mask);}while(0)
+	pthread_join(pwd_lang_handle, &tmp_mask);
+	store_and_discard_mask(pwd_langs);
 	/* safe to check for launched here because we joined git_handle above */
 	if (root_lang_task.launched) {
 		pthread_join(root_lang_task.handle, &tmp_mask);
-		root_langs = read_mask();
+		store_and_discard_mask(root_langs);
 	}
 	#undef read_mask
+	#undef store_and_discard_mask
 	print_lang(pwd_langs | root_langs);
 
 	/* we are done with git_info after langs is finished */
