@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <fnmatch.h>
 
+#define NOCOLOR
 #include "colors.h"
 #include "ep.h"
 
