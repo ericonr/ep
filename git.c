@@ -1,4 +1,6 @@
+#include <limits.h>
 #include <string.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -104,14 +106,6 @@ status_create_error:
 	return git_info;
 }
 
-struct statuses {
-	size_t c;
-	char s[64];
-	char format[3];
-	char prefix;
-};
-enum status_index { added, deleted, modified_unstaged, modified_staged, modified_both, untracked, status_index_n };
-
 static void *get_git_status(void *arg)
 {
 	struct git_info *git_info = arg;
@@ -120,13 +114,21 @@ static void *get_git_status(void *arg)
 	if (!f)
 		return NULL;
 
-	struct statuses g[status_index_n] = {
-		[added] = { .format = "A ", .prefix = '+' },
-		[deleted] = { .format = "D ", .prefix = '-' },
-		[modified_unstaged] = { .format = " M", .prefix = '~' },
-		[modified_staged] = { .format = "M ", .prefix = '>' },
-		[modified_both] = { .format = "MM", .prefix = '~' },
-		[untracked] = { .format = "??", .prefix = '+' },
+	typedef uint_fast16_t t_format;
+	#define FORMAT(s) (((t_format)(unsigned char)s[0]) | (((t_format)(unsigned char)s[1]) << CHAR_BIT))
+	enum status_index { added, deleted, modified_unstaged, modified_staged, modified_both, untracked, status_index_n };
+	struct statuses {
+		size_t c;
+		char s[32];
+		t_format format;
+		char prefix;
+	} g[status_index_n] = {
+		[added] = { .format = FORMAT("A "), .prefix = '+' },
+		[deleted] = { .format = FORMAT("D "), .prefix = '-' },
+		[modified_unstaged] = { .format = FORMAT(" M"), .prefix = '~' },
+		[modified_staged] = { .format = FORMAT("M "), .prefix = '>' },
+		[modified_both] = { .format = FORMAT("MM"), .prefix = '~' },
+		[untracked] = { .format = FORMAT("??"), .prefix = '+' },
 	};
 
 	char *line = NULL;
@@ -135,11 +137,12 @@ static void *get_git_status(void *arg)
 	while ((l = getdelim(&line, &n, 0, f)) != -1) {
 		if (l > 4) {
 			for (int i = 0; i < status_index_n; i++) {
-				g[i].c += !strncmp(g[i].format, line, 2);
+				g[i].c += FORMAT(line) == g[i].format;
 			}
 		}
 	}
 	free(line);
+	#undef FORMAT
 
 	/* cheat to display things closer to a "userful" measure */
 	g[added].c += g[modified_staged].c + g[modified_both].c;
