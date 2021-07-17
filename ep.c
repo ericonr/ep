@@ -22,6 +22,8 @@
 #define PROMPT " ➜ "
 #define JOBS " ✦"
 
+pthread_attr_t *thread_a = 0;
+
 int main(int argc, char **argv)
 {
 	setlocale(LC_ALL, "");
@@ -54,18 +56,37 @@ int main(int argc, char **argv)
 		}
 	}
 
+	pthread_attr_t attr;
+
+	do {
+		if (pthread_attr_init(&attr)) break;
+		/* stack buffer in popen/posix_spawn can get big, so we can't go much below 8KB;
+		 * we subtract 1024 so libc TLS can still fit into a 8KB region instead of
+		 * requiring a 12KB region. This fiddling has no effect if PAGE_SIZE>4KB */
+		if (pthread_attr_setstacksize(&attr, (1 << 13) - 1024)) {
+			pthread_attr_destroy(&attr);
+			break;
+		}
+		/* guarantee at least one memory page as guard */
+		if (pthread_attr_setguardsize(&attr, 1)) {
+			pthread_attr_destroy(&attr);
+			break;
+		}
+		thread_a = &attr;
+	} while(0);
+
 	/* start threads for long(er) running steps */
 	struct threaded_task root_lang_task = { .task = task_launch_root_lang };
 	int git_launched = 1;
 	pthread_t git_handle;
-	if (pthread_create(&git_handle, NULL, git_thread, &root_lang_task)) {
+	if (pthread_create(&git_handle, thread_a, git_thread, &root_lang_task)) {
 		e(INFO, "couldn't create git thread", errno);
 		git_launched = 0;
 	}
 
 	int pwd_lang_launched = 1;
 	pthread_t pwd_lang_handle;
-	if (pthread_create(&pwd_lang_handle, NULL, lang_thread, NULL)) {
+	if (pthread_create(&pwd_lang_handle, thread_a, lang_thread, NULL)) {
 		e(INFO, "couldn't create lang thread", errno);
 		pwd_lang_launched = 0;
 	}

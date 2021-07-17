@@ -15,6 +15,9 @@ struct threaded_task {
 	enum task_identity task;
 };
 
+/* from ep.c */
+extern pthread_attr_t *thread_a;
+
 /* from out.c */
 extern FILE *out, *outerr;
 enum log_level_value { DEBUG, INFO, WARN, ERROR };

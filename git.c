@@ -94,14 +94,14 @@ void *git_thread(void *arg)
 	 * if we add more stuff to do in repos, launch more threads */
 
 	pthread_t status_handle, root_handle;
-	if (pthread_create(&status_handle, NULL, get_git_status, git_info))
+	if (pthread_create(&status_handle, thread_a, get_git_status, git_info))
 		goto status_create_error;
-	if (pthread_create(&root_handle, NULL, get_git_root, git_info))
+	if (pthread_create(&root_handle, thread_a, get_git_root, git_info))
 		goto root_create_error;
 
 	pthread_join(root_handle, NULL);
 	if (root_lang_task && git_info->git_root) {
-		root_lang_task->launched = !pthread_create(&root_lang_task->handle, NULL, lang_thread, git_info->git_root);
+		root_lang_task->launched = !pthread_create(&root_lang_task->handle, thread_a, lang_thread, git_info->git_root);
 	}
 root_create_error:
 	pthread_join(status_handle, NULL);
