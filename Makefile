@@ -1,5 +1,5 @@
-LANGUAGE = po/strings_pt.c
-CFLAGS = -g -Og -pipe -Ipo/ -D_GNU_SOURCE
+LANGUAGE = pt
+CFLAGS = -Wall -Wextra -Wno-parentheses -g -Og -pipe -Ipo/ -D_GNU_SOURCE
 
 # default to static to run on glibc and musl
 STATIC = -static
@@ -13,7 +13,10 @@ bindir = $(PREFIX)/bin
 
 all: ep
 
-ep: ep.c out.c path.c git.c lang.c ssh.c $(LANGUAGE)
+ep: ep.c out.c path.c git.c lang.c ssh.c po/strings_$(LANGUAGE).c
 
 install: ep
 	install -m755 $< $(bindir)/ep
+
+clean:
+	rm -f ep
