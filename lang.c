@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <fnmatch.h>
 
+#include "colors.h"
 #include "ep.h"
 
 enum lang_index {
@@ -49,11 +50,14 @@ const struct lang_check l[] = {
 
 /* bitmap of 1<<lang_index */
 void print_lang(uint64_t mask) {
+	/* only change color if we're going to print something */
+	if (mask) fg_color(red);
 	for (int i = 0; i < lang_index_n; i++) {
 		if (mask & (1 << i)) {
 			p(l[i].display);
 		}
 	}
+	if (mask) reset_color();
 }
 
 void *lang_thread(void *arg)

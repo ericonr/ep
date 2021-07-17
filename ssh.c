@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <sys/utsname.h>
 
+#include "colors.h"
 #include "ep.h"
 
 void print_ssh(void)
@@ -16,8 +17,10 @@ void print_ssh(void)
 		if (uname(&u) || !u.nodename[0])
 			return;
 
+		fg_color(yellow);
 		p("(");
 		p(u.nodename);
 		p(") ");
+		reset_color();
 	}
 }

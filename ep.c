@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "colors.h"
 #include "info_strings.h"
 #include "ep.h"
 
@@ -81,7 +82,7 @@ int main(int argc, char **argv)
 	/* show we are on a different machine */
 	print_ssh();
 
-	print_pwd(home, pwd);
+	use_color(bcyan, print_pwd(home, pwd));
 
 	/* git status */
 	void *git_info;
@@ -117,7 +118,7 @@ int main(int argc, char **argv)
 			if (n > 1) {
 				/* jobs emoji is wide */
 				p(" ");
-				p(shell_jobs);
+				use_color(blue, p(shell_jobs));
 			}
 		}
 	}
@@ -140,13 +141,13 @@ int main(int argc, char **argv)
 		} else {
 			snprintf(dur, sizeof(dur), " %llds", command_duration);
 		}
-		p(dur);
+		use_color(green, p(dur));
 	}
 	/* 127 means command not found, that prints a big enough message already */
 	if (exit_status && exit_status != 127) {
 		char ex[256];
 		snprintf(ex, sizeof(ex), " [%d]", exit_status);
-		p(ex);
+		use_color(green, p(ex));
 	}
 
 	p(PROMPT);

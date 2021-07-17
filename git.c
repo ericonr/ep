@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#include "colors.h"
 #include "ep.h"
 
 struct git_info {
@@ -17,13 +18,15 @@ void print_git(void *arg)
 
 	if (git_info->git_branch_name) {
 		p(" ");
-		p(git_info->git_branch_name);
+		use_color(magenta, p(git_info->git_branch_name));
 
+		fg_color(blue);
 		if (git_info->git_status) {
 			p(" [");
 			p(git_info->git_status);
 			p("]");
 		}
+		reset_color();
 	}
 }
 
