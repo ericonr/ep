@@ -1,5 +1,6 @@
 LANGUAGE = pt
-CFLAGS = -Wall -Wextra -Wno-parentheses -g -Og -pipe -Ipo/ -D_GNU_SOURCE
+#NOCOLOR = -DNOCOLOR
+CFLAGS = -Wall -Wextra -Wno-parentheses -g -Og -pipe -Ipo/ -D_GNU_SOURCE $(NOCOLOR)
 
 # default to static to run on glibc and musl
 STATIC = -static
@@ -13,7 +14,7 @@ bindir = $(PREFIX)/bin
 
 all: ep
 
-ep: ep.c out.c path.c git.c lang.c ssh.c po/strings_$(LANGUAGE).c
+ep: ep.c out.c path.c git.c lang.c ssh.c colors.c po/strings_$(LANGUAGE).c
 
 install: ep
 	install -m755 $< $(bindir)/ep
