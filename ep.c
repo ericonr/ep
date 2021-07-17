@@ -4,7 +4,6 @@
  * configuring existing ones.
  *
  * Liberties taken:
- *   - might crash with segfault if some allocations fail; NULL is special only when meaningful beyond allocation
  *   - assumes stdio is reasonably buffered, so multiple fputs calls aren't expensive
  */
 
