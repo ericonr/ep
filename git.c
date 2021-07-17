@@ -25,7 +25,6 @@ void print_git(void *arg)
 	}
 }
 
-
 void free_git(void *arg)
 {
 	struct git_info *git_info = arg;
@@ -117,7 +116,7 @@ static void *get_git_status(void *arg)
 {
 	struct git_info *git_info = arg;
 
-	FILE *f = popen("git status --porcelain=v1 -z 2>/dev/null", "re");
+	FILE *f = popen("timeout 0.8s git status --porcelain=v1 -z 2>/dev/null", "re");
 	if (!f)
 		return NULL;
 
