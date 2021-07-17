@@ -20,6 +20,7 @@
 #include "ep.h"
 
 #define PROMPT " ➜ "
+#define JOBS " ✦"
 
 int main(int argc, char **argv)
 {
@@ -113,7 +114,7 @@ int main(int argc, char **argv)
 	if (shell_jobs) {
 		int n = atoi(shell_jobs);
 		if (n >= 1) {
-			p(" ✦");
+			p(JOBS);
 			if (n > 1) {
 				/* jobs emoji is wide */
 				p(" ");
