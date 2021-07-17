@@ -56,16 +56,18 @@ int main(int argc, char **argv)
 
 	/* start threads for long(er) running steps */
 	struct threaded_task root_lang_task = { .task = task_launch_root_lang };
+	int git_launched = 1;
 	pthread_t git_handle;
 	if (pthread_create(&git_handle, NULL, git_thread, &root_lang_task)) {
-		e(ERROR, "couldn't create git thread", errno);
-		return 1;
+		e(INFO, "couldn't create git thread", errno);
+		git_launched = 0;
 	}
 
+	int pwd_lang_launched = 1;
 	pthread_t pwd_lang_handle;
 	if (pthread_create(&pwd_lang_handle, NULL, lang_thread, NULL)) {
-		e(ERROR, "couldn't create lang thread", errno);
-		return 1;
+		e(INFO, "couldn't create lang thread", errno);
+		pwd_lang_launched = 0;
 	}
 
 	if (chroot)
@@ -85,10 +87,12 @@ int main(int argc, char **argv)
 	use_color(bcyan, print_pwd(home, pwd));
 
 	/* git status */
-	void *git_info;
-	pthread_join(git_handle, &git_info);
-	if (git_info)
-		print_git(git_info);
+	void *git_info = 0;
+	if (git_launched) {
+		pthread_join(git_handle, &git_info);
+		if (git_info)
+			print_git(git_info);
+	}
 
 	/* programming languages */
 	uint64_t pwd_langs = 0, root_langs = 0;
@@ -96,8 +100,10 @@ int main(int argc, char **argv)
 	/* if thread returned NULL, assume no language */
 	#define read_mask() (tmp_mask ? *(uint64_t *)tmp_mask : 0)
 	#define store_and_discard_mask(dst) do{dst = read_mask(); free(tmp_mask);}while(0)
-	pthread_join(pwd_lang_handle, &tmp_mask);
-	store_and_discard_mask(pwd_langs);
+	if (pwd_lang_launched) {
+		pthread_join(pwd_lang_handle, &tmp_mask);
+		store_and_discard_mask(pwd_langs);
+	}
 	/* safe to check for launched here because we joined git_handle above */
 	if (root_lang_task.launched) {
 		pthread_join(root_lang_task.handle, &tmp_mask);
