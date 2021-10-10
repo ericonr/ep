@@ -113,7 +113,7 @@ static void *get_git_status(void *arg)
 {
 	struct git_info *git_info = arg;
 
-	FILE *f = popen("timeout 0.8s git status --porcelain=v1 --untracked-files=no -z 2>/dev/null", "re");
+	FILE *f = popen("timeout 0.8s git --no-optional-locks status --porcelain=v1 --untracked-files=no -z 2>/dev/null", "re");
 	if (!f)
 		return NULL;
 
