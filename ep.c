@@ -19,7 +19,7 @@
 #include "info_strings.h"
 #include "ep.h"
 
-#define PROMPT " ➜ "
+#define PROMPT " λ "
 #define JOBS " ✦"
 
 pthread_attr_t *thread_a = 0;
